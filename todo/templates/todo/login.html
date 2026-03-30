@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'todo/login.css' %}">
+</head>
+<body class="login-page">
+    <div class="login-card">
+        <div class="login-header">
+            <h2 class="login-title">Login</h2>
+            <p class="login-subtitle">Welcome back</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <p class="messages">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        {% if form.errors %}
+            <div class="login-errors">Invalid username or password. Please try again.</div>
+        {% endif %}
+
+        <form method="post" action="" class="login-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+
+        <p>Don't have an account? <a href="{% url 'todo:signup' %}">Register here</a></p>
+    </div>
+</body>
+</html>

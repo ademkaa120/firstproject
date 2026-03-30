@@ -1,0 +1,38 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Task</title>
+    <link rel="stylesheet" href="{% static 'todo/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <main class="main-container">
+        <section class="add-task-section">
+            <div class="add-task-container">
+                <h3>Edit Task</h3>
+                <form method="post" action="" class="add-task-form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {{ form.title }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.priority }}
+                    </div>
+                    <div class="form-group">
+                        <label for="id_created_at">Task time</label>
+                        {{ form.created_at }}
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <a href="{% url 'todo:index' %}" class="btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

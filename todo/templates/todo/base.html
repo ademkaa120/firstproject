@@ -1,0 +1,287 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Todo List | Productivity Hub</title>
+    <link rel="stylesheet" href="{% static 'todo/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <nav class="navbar">
+            <div class="navbar-container">
+                <div class="navbar-brand">
+                    <i class="fas fa-check-circle"></i>
+                    <span>TaskFlow Pro</span>
+                </div>
+                <ul class="navbar-menu">
+                    <li><a href="{% url 'todo:index' %}" class="nav-link active">All Tasks</a></li>
+                    <li><a href="#completed" class="nav-link">Completed</a></li>
+                    <li><a href="#pending" class="nav-link">Pending</a></li>
+                    {% if user.is_authenticated %}
+                    <li><span class="nav-user"><i class="fas fa-user"></i> {{ user.username }}</span></li>
+                    <li>
+                        <form method="post" action="/logout/" class="logout-form">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-logout-btn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <li><a href="{% url 'login' %}" class="nav-link">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        {% if messages %}
+        <div class="messages-container" id="flash-messages">
+            {% for message in messages %}
+            <div class="message message-{{ message.tags }}">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">Stay Organized & Productive</h1>
+                <p class="hero-subtitle">Manage your tasks efficiently with our advanced todo application</p>
+            </div>
+        </section>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <div class="search-container">
+                <form method="get" style="display: flex; gap: 1rem; width: 100%; align-items: center;">
+                    <div style="flex: 1;">
+                        <input type="text" name="search" class="search-input" placeholder="Search tasks by title or priority..." value="{{ search_query }}">
+                    </div>
+                    <button type="submit" class="search-btn">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    {% if search_query %}
+                        <a href="{% url 'todo:index' %}" class="clear-search">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    {% endif %}
+                </form>
+            </div>
+        </section>
+
+        <!-- Statistics Dashboard -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon pending">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Tasks</h3>
+                        <p class="stat-number">{% if tasks %}{{ tasks|length }}{% else %}0{% endif %}</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon completed">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Completed</h3>
+                        <p class="stat-number">{% if tasks %}{{ tasks|dictsort:"completed"|length }}{% else %}0{% endif %}</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon active">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>In Progress</h3>
+                        <p class="stat-number">{% if tasks %}{{ tasks|length|add:"-1" }}{% else %}0{% endif %}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Todo List Section -->
+        <section class="todo-section">
+            <div class="todo-header">
+                <h2>
+                    <i class="fas fa-list-check"></i>
+                    Your Tasks
+                </h2>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="pending">Pending</button>
+                    <button class="filter-btn" data-filter="completed">Completed</button>
+                </div>
+            </div>
+
+            <!-- Todo List Container -->
+            <div class="todo-list-container">
+                {% if tasks %}
+                    <!-- Pending Tasks -->
+                    <div class="todo-category pending-category" id="pending">
+                        <h3 class="category-title">
+                            <i class="fas fa-hourglass-start"></i>
+                            Pending Tasks
+                        </h3>
+                        <div class="tasks-wrapper">
+                            {% for task in tasks %}
+                                {% if not task.completed %}
+                                    <div class="todo-item pending-item" data-status="pending">
+                                        <div class="todo-checkbox">
+                                            <form method="post" action="{% url 'todo:toggle' task.id %}">
+                                                {% csrf_token %}
+                                                <input type="checkbox" name="completed" id="task-{{ task.id }}" class="task-checkbox" onchange="this.form.submit()">
+                                                <label for="task-{{ task.id }}"></label>
+                                            </form>
+                                        </div>
+                                        <div class="todo-content">
+                                            <h4 class="todo-title">{{ task.title }}</h4>
+                                            <p class="todo-meta">
+                                                <span class="priority-badge priority-{{ task.priority }}">
+                                                    <i class="fas fa-exclamation-circle"></i> 
+                                                    {% if task.priority == "high" %}High Priority
+                                                    {% elif task.priority == "medium" %}Medium Priority
+                                                    {% else %}Low Priority
+                                                    {% endif %}
+                                                </span>
+                                                <span class="task-time">
+                                                    <i class="fas fa-clock"></i> {{ task.created_at|date:"l, M j, g:i A" }}
+                                                </span>
+                                            </p>
+                                        </div>
+                                        <div class="todo-actions">
+                                            <a href="{% url 'todo:edit' task.id %}" class="action-btn edit-btn" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form method="post" action="{% url 'todo:delete' task.id %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="action-btn delete-btn" title="Delete">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Completed Tasks -->
+                    <div class="todo-category completed-category" id="completed">
+                        <h3 class="category-title">
+                            <i class="fas fa-check-circle"></i>
+                            Completed Tasks
+                        </h3>
+                        <div class="tasks-wrapper">
+                            {% for task in tasks %}
+                                {% if task.completed %}
+                                    <div class="todo-item completed-item" data-status="completed">
+                                        <div class="todo-checkbox">
+                                            <form method="post" action="{% url 'todo:toggle' task.id %}">
+                                                {% csrf_token %}
+                                                <input type="checkbox" name="completed" id="task-{{ task.id }}" class="task-checkbox" checked onchange="this.form.submit()">
+                                                <label for="task-{{ task.id }}"></label>
+                                            </form>
+                                        </div>
+                                        <div class="todo-content">
+                                            <h4 class="todo-title">{{ task.title }}</h4>
+                                            <p class="todo-meta">
+                                                <span class="completion-date">
+                                                    <i class="fas fa-calendar-check"></i> Completed
+                                                </span>
+                                                <span class="task-time">
+                                                    <i class="fas fa-clock"></i> {{ task.created_at|date:"l, M j, g:i A" }}
+                                                </span>
+                                            </p>
+                                        </div>
+                                        <div class="todo-actions">
+                                            <form method="post" action="{% url 'todo:delete' task.id %}" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="action-btn delete-btn" title="Delete">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Empty State -->
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-inbox"></i>
+                        </div>
+                        <h3>No Tasks Yet</h3>
+                        <p>Create your first task to get started!</p>
+                        <button class="btn-primary">
+                            <i class="fas fa-plus"></i> Create Task
+                        </button>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- Add Task Section -->
+        <section class="add-task-section">
+            <div class="add-task-container">
+                <h3>Create New Task</h3>
+                <form method="post" action="" class="add-task-form" id="addTaskForm">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <input type="text" name="title" placeholder="What needs to be done?" class="task-input" required>
+                    </div>
+                    <div class="form-group">
+                        <select name="priority" class="priority-select">
+                            <option value="low">Low Priority</option>
+                            <option value="medium" selected>Medium Priority</option>
+                            <option value="high">High Priority</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-plus"></i> Add Task
+                    </button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 TaskFlow Pro. Stay productive, stay organized.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Auto-hide flash messages after 4 seconds
+        const flash = document.getElementById('flash-messages');
+        if (flash) {
+            setTimeout(() => {
+                flash.style.transition = 'opacity 0.5s ease';
+                flash.style.opacity = '0';
+                setTimeout(() => flash.remove(), 500);
+            }, 4000);
+        }
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

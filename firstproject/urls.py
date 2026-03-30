@@ -21,7 +21,6 @@ from todo.views import CustomLoginView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('user/', include('user.urls')),
     path('', include(('todo.urls', 'todo'), namespace='todo')),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', views.LogoutView.as_view(), name='logout'),
